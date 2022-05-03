@@ -8,6 +8,9 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import java.sql.Timestamp;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 @Entity
 @Data
@@ -19,6 +22,14 @@ public class User {
     private String password;
     private String email;
     private String role; // ROLE_USER, ROLE_ADMIN
+    private String roles; // USER, ADMIN
     @CreationTimestamp //자동 값 할당
     private Timestamp createDate;
+
+    public List<String> getRoleList(){
+        if (this.roles.length() > 0) {
+            return Arrays.asList(this.roles.split(","));
+        }
+        return new ArrayList<>();
+    }
 }
