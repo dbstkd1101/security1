@@ -1,5 +1,7 @@
 package com.cos.security1.config.jwt;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.cos.security1.config.auth.PrincipalDetails;
 import com.cos.security1.model.User;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -12,13 +14,12 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
-import javax.servlet.ServletRequest;
-import javax.servlet.ServletResponse;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Date;
 
-// 스프링 시큐리니에서 UsernamePasswordAuthenticationFilter가 존재함.
+// 스프링 시큐리티에서 UsernamePasswordAuthenticationFilter가 존재함.
 // "/login" 요청에 의해 username, password를 POST 요청하면 해당 필터 동작
 // but 현재 SecurityConfig에서 formLogin disable 한 상태 → 직접 addFilter 해야함
 @RequiredArgsConstructor
@@ -63,6 +64,17 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
     // JWT 토큰을 만들어서 request 요청한 사용자에게 JWT 토큰을 response 해주면 됨
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response, FilterChain chain, Authentication authResult) throws IOException, ServletException {
-        super.successfulAuthentication(request, response, chain, authResult);
+        PrincipalDetails principalDetails = (PrincipalDetails)authResult.getPrincipal();
+
+        //RSA 방식은 아니고 Hash 암호 방식1
+        String jwtToken = JWT.create()
+                .withSubject(principalDetails.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis() + (JwtProperties.EXPIRATION_TIME)))
+                // 토큰 안에 넣고 싶은 내용 아래와 같이 추가
+                .withClaim("id", principalDetails.getUser().getId())
+                .withClaim("username", principalDetails.getUser().getUsername())
+                .sign(Algorithm.HMAC512(JwtProperties.SECRET));
+        // 아래 Bearer 다음 한 칸 반드시 띄어야 함
+        response.addHeader(JwtProperties.HEADER_STRING, JwtProperties.TOKEN_PREFIX+jwtToken);
     }
 }

@@ -1,9 +1,9 @@
 package com.cos.security1.config;
 
 import com.cos.security1.config.jwt.JwtAuthenticationFilter;
-import com.cos.security1.filter.MyFilter1;
+import com.cos.security1.config.jwt.JwtAuthorizationFilter;
+import com.cos.security1.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Required;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
@@ -12,8 +12,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
-import org.springframework.security.web.context.SecurityContextPersistenceFilter;
 
 import javax.servlet.Filter;
 
@@ -24,7 +22,7 @@ import javax.servlet.Filter;
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     private final CorsConfig corsFilter;
-
+    private final UserRepository userRepository;
     @Bean   // 해당 메서드의 리턴되는 오브젝트를 IoC로 등록(→ 어디서든(indexController) 사용할 수 있음)
     public BCryptPasswordEncoder passwordEncoder(){
         return new BCryptPasswordEncoder();
@@ -43,6 +41,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         .formLogin().disable()// jwt 서버니까, 내쪽에서 ID/PW 로그인을 안함. 요청 받기만 하겠지.→ 따라서 UserDetailsService로 가는 필터 필요
         .httpBasic().disable() //기본적인 http login 방식 아예 사용 안함
         .addFilter(new JwtAuthenticationFilter(authenticationManager())) // AuthenticationManager를 param으로 던저야 함
+        .addFilter(new JwtAuthorizationFilter(authenticationManager(), userRepository))
         .authorizeRequests()
         .antMatchers("/user/**").authenticated()    //인증만 되면 들어감
         .antMatchers("/manager/**").access("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")  // 인증 뿐만 아니라, 하기 권한까지 있어야 한다.

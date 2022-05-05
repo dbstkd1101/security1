@@ -28,14 +28,19 @@ public class PrincipalDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         // 본 method의 return type 때문에 아래 getRole 사용 불가
         //user.getRole();
-        Collection<GrantedAuthority> collect = new ArrayList<>();
-        collect.add(new GrantedAuthority() {
-            @Override
-            public String getAuthority() {
-                return user.getRole();
-            }
-        });
-        return collect;
+
+        Collection<GrantedAuthority> authorities = new ArrayList<>();
+//        collect.add(new GrantedAuthority() {
+//            @Override
+//            public String getAuthority() {
+//                return user.getRole();
+//            }
+//        });
+//        return collect;
+      user.getRoleList().forEach(r->{
+          authorities.add(() -> r);
+      });
+        return authorities;
     }
 
     @Override
