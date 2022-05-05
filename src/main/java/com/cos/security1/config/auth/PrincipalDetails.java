@@ -7,12 +7,14 @@ package com.cos.security1.config.auth;
 // User obejct type : UserDetails type 객체
 // Security Session -> Authentication -> UserDetails(PrincipalDetails)
 import com.cos.security1.model.User;
+import lombok.Data;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.ArrayList;
 import java.util.Collection;
 
+@Data
 // bean/component 관련 annot 없는 이유는 나중에 view에서 강제로 띄울 것이기 때문에
 public class PrincipalDetails implements UserDetails {
 

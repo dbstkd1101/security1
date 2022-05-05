@@ -1,5 +1,6 @@
 package com.cos.security1.config;
 
+import com.cos.security1.config.jwt.JwtAuthenticationFilter;
 import com.cos.security1.filter.MyFilter1;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Required;
@@ -22,13 +23,12 @@ import javax.servlet.Filter;
 @RequiredArgsConstructor
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
-//    @Bean   // 해당 메서드의 리턴되는 오브젝트를 IoC로 등록(→ 어디서든(indexController) 사용할 수 있음)
-//    public BCryptPasswordEncoder encodePwd(){
-//        return new BCryptPasswordEncoder();
-//    }
-
     private final CorsConfig corsFilter;
 
+    @Bean   // 해당 메서드의 리턴되는 오브젝트를 IoC로 등록(→ 어디서든(indexController) 사용할 수 있음)
+    public BCryptPasswordEncoder passwordEncoder(){
+        return new BCryptPasswordEncoder();
+    }
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         //아래와 같이 하면 SecurityFilter Chain 중 제일 먼저 시작하는 Filter보다 before 이므로, 가장먼저 실행 가능
@@ -40,8 +40,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         //session을 사용하지 않는 서버가 되겠다.
         http.sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
         .and().addFilter((Filter) corsFilter)
-        .formLogin().disable()// jwt 서버니까, 내쪽에서 ID/PW 로그인을 안함. 요청 받기만 하겠지.
+        .formLogin().disable()// jwt 서버니까, 내쪽에서 ID/PW 로그인을 안함. 요청 받기만 하겠지.→ 따라서 UserDetailsService로 가는 필터 필요
         .httpBasic().disable() //기본적인 http login 방식 아예 사용 안함
+        .addFilter(new JwtAuthenticationFilter(authenticationManager())) // AuthenticationManager를 param으로 던저야 함
         .authorizeRequests()
         .antMatchers("/user/**").authenticated()    //인증만 되면 들어감
         .antMatchers("/manager/**").access("hasRole('ROLE_ADMIN') or hasRole('ROLE_MANAGER')")  // 인증 뿐만 아니라, 하기 권한까지 있어야 한다.
